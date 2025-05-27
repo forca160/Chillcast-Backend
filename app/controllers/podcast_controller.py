@@ -24,6 +24,14 @@ def get_all_podcasts():
         return jsonify(podcasts=podcasts), 200
     else:
         return jsonify({"error": "No se pudo realizar la búsqueda de podcasts"}), 400    
+    
+def get_podcast_by_id():
+    id_podcast = request.args.get('id')
+    podcast = podcast_service().get_podcast_by_id(id_podcast)
+    if podcast != None:
+        return jsonify(podcasts=podcast), 200
+    else:
+        return jsonify({"error": "No se pudo realizar la búsqueda de podcasts"}), 400      
 
 """def agregar_animal():
 
