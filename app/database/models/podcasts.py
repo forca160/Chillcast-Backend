@@ -1,4 +1,5 @@
 from app.database.database_config import db
+from app.database.models.episodes import episodes
 
 class podcasts(db.Document):
     title = db.StringField()
@@ -9,7 +10,7 @@ class podcasts(db.Document):
     image = db.StringField()
     author = db.StringField()
     GenreName = db.StringField()
-    episodes = db.ListField(db.ReferenceField("episodes"))
+    episodes = db.EmbeddedDocumentListField(episodes)
     
 
     def to_json(self):

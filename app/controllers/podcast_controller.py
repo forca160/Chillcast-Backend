@@ -21,7 +21,7 @@ logs = logger().get_logger()
 def get_all_podcasts():
     podcasts = podcast_service().get_all_podcasts()
     if podcasts != None:
-        return jsonify(podcasts=podcasts['documentos']), 200
+        return jsonify(podcasts=podcasts), 200
     else:
         return jsonify({"error": "No se pudo realizar la búsqueda de podcasts"}), 400    
 

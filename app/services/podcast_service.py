@@ -1,29 +1,64 @@
-from app.database.models.podcasts import podcasts
+#from app.database.models.podcasts import podcasts
 from app.utils.logger import logger
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
+import os
+from dotenv import load_dotenv
 
 class podcast_service():
 
     logs = logger().get_logger()
+    # Cargar variables de entorno desde el archivo .env
+    load_dotenv()
 
-    """def agregar_animal(self, animal_type, animal_quantity):
-        try:
-            
-            animal = Animals(
-                animal_type=animal_type,
-                animal_quantity=animal_quantity
-            )
-    
-            if animal.save():
-                return animal
-        except Exception as e:
-            self.logs.warning(e)
-            return False"""
+
+    def json_document(self, documento):
+        documento_list = list(documento)
+        # Convierte ObjectId a string
+        for doc in documento_list:
+            doc['_id'] = str(doc['_id'])
+        return documento_list
         
     def get_all_podcasts(self):
+
+        try:
+            # Conectar al servidor MongoDB (por defecto, localhost:27017)
+            client = MongoClient(os.getenv('MONGODB_HOST'))
+            
+            # Acceder a la base de datos
+            db = client[os.getenv('MONGODB_DB')]
+            
+            # Acceder a la colección
+            collection = db['podcasts']
+            
+            # Obtener todos los documentos de la colección
+            documentos = list(collection.find())
+            
+                        
+            return self.json_document(documentos)
+
+            
+        except ConnectionFailure:
+            # Manejo de la excepción ConnectionFailure
+            print("Error de conexión con la base de datos MongoDB.")
+            # Otras acciones a realizar en caso de excepción
+            
+        except Exception as e:
+            # Manejo de otras excepciones
+            print("Ocurrió un error:", e)
+            # Otras acciones a realizar en caso de excepción
+            
+        finally:
+            # Acciones a realizar después del bloque try-except, como cerrar conexiones
+            if 'client' in locals():
+                client.close()
+        
+    """def get_all_podcasts(self):
         documentos = podcasts.objects()  # Esto obtiene todos los documentos de la colección
         podcasts_serializados = [doc.to_json() for doc in documentos]
         return {'documentos': podcasts_serializados}
-    
+    """
+
     """def get_categories(self):
         documentos = podcasts.objects()  # Esto obtiene todos los documentos de la colección
         podcasts_serializados = [doc.to_json() for doc in documentos]

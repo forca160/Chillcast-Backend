@@ -6,7 +6,6 @@ class episodes(db.EmbeddedDocument):
     description = db.StringField()
     duration_ms = db.IntField()
     release_date = db.StringField()
-    expllicit = db.BooleanField()
     language = db.StringField()
     image = db.StringField()
     audio_url = db.StringField()
