@@ -20,7 +20,7 @@ def add_animal_category():
 def get_podcasts():
     return get_all_podcasts()
 
-@podcast_routes.route('/', methods=['GET'])
+@podcast_routes.route('/id', methods=['GET'])
 def get_podcast():
     return get_podcast_by_id()
 

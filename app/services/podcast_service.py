@@ -18,7 +18,14 @@ class podcast_service():
         # Convierte ObjectId a string
         for doc in documento_list:
             doc['_id'] = str(doc['_id'])
+            doc.pop('episodes', None)
         return documento_list
+    
+    def json_doc(self, documento):
+        documento['_id'] = str(documento['_id'])
+        documento.pop('episodes')
+        return documento
+
         
     def get_all_podcasts(self):
 
@@ -69,11 +76,10 @@ class podcast_service():
             obj_id = ObjectId(documento_id)
             # Buscar el documento por su ID
             documento = collection.find_one({"_id": obj_id})
+            print(documento)
 
-            return documento if documento else None            
+            return self.json_doc(documento) if documento else None            
 
-
-            
         except ConnectionFailure:
             # Manejo de la excepción ConnectionFailure
             print("Error de conexión con la base de datos MongoDB.")
