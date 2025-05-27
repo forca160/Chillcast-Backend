@@ -3,6 +3,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from app.database.database_config import Config, init_db
+from app.routes.podcast_routes import podcast_routes
 from datetime import timedelta
 import os
 
@@ -33,7 +34,8 @@ def crear_app():
             "allow_headers": ["Content-Type", "Authorization"]
         }
     })
-
+    
+    app.register_blueprint(podcast_routes)
 
     """app.register_blueprint(auth_routes)
     app.register_blueprint(base_routes)

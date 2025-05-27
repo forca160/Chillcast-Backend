@@ -1,7 +1,7 @@
 from flask import jsonify, request
 from flask_bcrypt import Bcrypt
 from app.utils.logger import logger
-from app.services.animal_service import animal_service
+from app.services.podcast_service import podcast_service
 from dotenv import load_dotenv
 
 
@@ -11,12 +11,19 @@ load_dotenv()
 
 logs = logger().get_logger()
 
-def get_categories():
+"""def get_categories():
     animals = animal_service().get_animals()
     if animals != None:
         return jsonify(animals=animals['documentos']), 200
     else:
-        return jsonify({"error": "No se pudo realizar la búsqueda de animales"}), 400
+        return jsonify({"error": "No se pudo realizar la búsqueda de animales"}), 400"""
+    
+def get_all_podcasts():
+    podcasts = podcast_service().get_all_podcasts()
+    if podcasts != None:
+        return jsonify(podcasts=podcasts['documentos']), 200
+    else:
+        return jsonify({"error": "No se pudo realizar la búsqueda de podcasts"}), 400    
 
 """def agregar_animal():
 

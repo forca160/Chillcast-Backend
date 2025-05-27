@@ -1,10 +1,16 @@
 from app.database.database_config import db
-from app.database.models.animals.animals import Animals
 
-class Pastures(db.Document):
-    name = db.StringField(required=True, max_length=50)
-    field = db.ReferenceField('Fields', required=True)
-    animals = db.EmbeddedDocumentListField(Animals)
+
+class episodes(db.EmbeddedDocument):
+    title = db.StringField()
+    description = db.StringField()
+    duration_ms = db.IntField()
+    release_date = db.StringField()
+    expllicit = db.BooleanField()
+    language = db.StringField()
+    image = db.StringField()
+    audio_url = db.StringField()
+    
 
     def to_json(self):
         return {
