@@ -12,9 +12,9 @@ load_dotenv()
 logs = logger().get_logger()
 
 """def get_categories():
-    animals = animal_service().get_animals()
-    if animals != None:
-        return jsonify(animals=animals['documentos']), 200
+    categories = podcast_service().get_categories()
+    if categories != None:
+        return jsonify(categories=categories['documentos']), 200
     else:
         return jsonify({"error": "No se pudo realizar la búsqueda de animales"}), 400"""
     

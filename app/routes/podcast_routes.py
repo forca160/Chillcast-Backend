@@ -1,6 +1,6 @@
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
-from app.controllers.podcast_controller import get_categories, get_all_podcasts
+from app.controllers.podcast_controller import get_all_podcasts
 """from app.utils.required_roles import roles_requeridos
 from app.utils.enums.roles_enum import Roles"""
 
@@ -20,7 +20,7 @@ def add_animal_category():
 def get_podcasts():
     return get_all_podcasts()
 
-@podcast_routes.route('/podcast-category', methods=['GET'])
+"""@podcast_routes.route('/podcast-category', methods=['GET'])
 def get_podcast_category():
     return get_categories()
-
+"""

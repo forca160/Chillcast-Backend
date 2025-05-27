@@ -9,7 +9,7 @@ class podcasts(db.Document):
     image = db.StringField()
     author = db.StringField()
     GenreName = db.StringField()
-    episodes = db.EmbeddedDocumentListField("episodes")
+    episodes = db.ListField(db.ReferenceField("episodes"))
     
 
     def to_json(self):

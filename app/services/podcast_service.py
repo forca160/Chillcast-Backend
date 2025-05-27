@@ -24,6 +24,11 @@ class podcast_service():
         podcasts_serializados = [doc.to_json() for doc in documentos]
         return {'documentos': podcasts_serializados}
     
+    """def get_categories(self):
+        documentos = podcasts.objects()  # Esto obtiene todos los documentos de la colección
+        podcasts_serializados = [doc.to_json() for doc in documentos]
+        return {'documentos': podcasts_serializados}"""    
+    
     """def embeber_animales(self, animal_category, animal_subcategory, animal_breed, animal_quantity):
         try:
             animales = Animals(
