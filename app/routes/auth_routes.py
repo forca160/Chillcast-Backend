@@ -15,6 +15,6 @@ def iniciar_sesion():
     return login()
 
 
-@auth_routes.route("/logout", methods=["POST"])
+@auth_routes.route("/delete", methods=["DELETE"])
 def delete_user():
     return delete()

@@ -4,6 +4,7 @@ from flask_bcrypt import Bcrypt
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 import os
+from bson import ObjectId
 from dotenv import load_dotenv
 from datetime import datetime
 
@@ -50,17 +51,16 @@ class user_service:
             collection = db["users"]
 
             data = collection.find_one(
-                {"$or": [{"username": username, "email": email}]}
+                {"$or": [{"username": username}, {"email": email}]}
             )
-
+            print(data)
             if data:
                 return "YA_EXISTE"
 
             post_id = collection.insert_one(user_dict).inserted_id
-
             documentos = collection.find(
-                {"_id": post_id},
-                {"password": 0, "_id": 0},
+                {"_id": ObjectId(post_id)},
+                {"password": 0},
             )
             return self.json_document(documentos)
 
@@ -101,11 +101,11 @@ class user_service:
 
             documentos = collection.find(
                 {
-                    "$or": [{"username": username, "email": email}],
+                    "$or": [{"username": username}, {"email": email}],
                     "password": password,
                     "activo": True,
                 },
-                {"password": 0, "_id": 0},
+                {"password": 0},
             )
 
             if not documentos:
@@ -151,7 +151,9 @@ class user_service:
             if not documentos:
                 return "NO_EXISTE"
 
-            collection.update_one({"_id": documentos.get("_id")})
+            collection.update_one(
+                {"_id": ObjectId(documentos.get("_id"))}, {"$set": {"activo": False}}
+            )
 
             return True
 
