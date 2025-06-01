@@ -1,78 +1,201 @@
 from app.database.models.users import Users
 from app.utils.logger import logger
 from flask_bcrypt import Bcrypt
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
+import os
+from dotenv import load_dotenv
+from datetime import datetime
 
 bcrypt = Bcrypt()
-class user_service():
+
+
+class user_service:
 
     logs = logger().get_logger()
 
-    def create_user(self, email, password, rol, nombre, apellido, telefono, fields, enterprise):
-        # Verificar si el usuario ya está registrado
-        if Users.objects(email=email).first():
-            raise ValueError("El usuario ya está registrado")
+    load_dotenv()
 
-        # Crear un nuevo usuario
-        user = Users(
-            email=email,
-            nombre=nombre,
-            password=password,
-            rol=rol,
-            apellido=apellido,
-            telefono=telefono,
-            fields=[fields], 
-            enterprise=enterprise
-        )
-        user.save()
-        return user
+    def json_document(self, documento):
+        documento_list = list(documento)
+        # Convierte ObjectId a string
+        for doc in documento_list:
+            doc["_id"] = str(doc["_id"])
+        return documento_list
+
+    def json_doc(self, documento):
+        documento["_id"] = str(documento["_id"])
+        return documento
+
+    def create_user(self, username, email, password, nombre, apellido, generos_fav):
+        # Verificar si el usuario ya está registrado
+        try:
+            user_dict = {
+                "username": username,
+                "email": email,
+                "password": password,
+                "nombre": nombre,
+                "apellido": apellido,
+                "generos_fav": generos_fav,
+                "activo": True,
+                "fecha_alta": datetime.today(),
+            }
+            # Conectar al servidor MongoDB (por defecto, localhost:27017)
+            client = MongoClient(os.getenv("MONGODB_HOST"))
+
+            # Acceder a la base de datos
+            db = client[os.getenv("MONGODB_DB")]
+
+            # Acceder a la colección
+            collection = db["users"]
+
+            data = collection.find_one(
+                {"$or": [{"username": username, "email": email}]}
+            )
+
+            if data:
+                return "YA_EXISTE"
+
+            post_id = collection.insert_one(user_dict).inserted_id
+
+            documentos = collection.find(
+                {"_id": post_id},
+                {"password": 0, "_id": 0},
+            )
+            return self.json_document(documentos)
+
+        except ConnectionFailure:
+            # Manejo de la excepción ConnectionFailure
+            print("Error de conexión con la base de datos MongoDB.")
+            # Otras acciones a realizar en caso de excepción
+
+        except Exception as e:
+            # Manejo de otras excepciones
+            print("Ocurrió un error:", e)
+            # Otras acciones a realizar en caso de excepción
+
+        finally:
+            # Acciones a realizar después del bloque try-except, como cerrar conexiones
+            if "client" in locals():
+                client.close()
 
     def edit_user(self, user, data):
         for key, value in data.items():
             if hasattr(user, key):
-                setattr(user, key, value)    
+                setattr(user, key, value)
 
         user.save()
         return user
-    
-    def verify_user(email, password):
-        # Busca al usuario por el nombre de usuario
-        user = Users.objects(email=email).first()
-        if not user:
-            return False
 
-        # Verifica si la contraseña está hasshead y es correcta
-        if not bcrypt.check_password_hash(user.password, password):
-            return False
-        
-        return user
-    
-    def check_duplicate_usernames(self, usernames):
+    def verify_user(self, username, email, password):
         try:
-            # Buscar usernames duplicados en la base de datos
-            existing_users = Users.objects(username__in=usernames).only("username")
-            duplicates = [user.username for user in existing_users]
-            return duplicates
+            user_dict = {"username": username, "email": email, "password": password}
+            # Conectar al servidor MongoDB (por defecto, localhost:27017)
+            client = MongoClient(os.getenv("MONGODB_HOST"))
+
+            # Acceder a la base de datos
+            db = client[os.getenv("MONGODB_DB")]
+
+            # Acceder a la colección
+            collection = db["users"]
+
+            documentos = collection.find(
+                {
+                    "$or": [{"username": username, "email": email}],
+                    "password": password,
+                    "activo": True,
+                },
+                {"password": 0, "_id": 0},
+            )
+
+            if not documentos:
+                return "NO_EXISTE"
+
+            return self.json_document(documentos)
+
+        except ConnectionFailure:
+            # Manejo de la excepción ConnectionFailure
+            print("Error de conexión con la base de datos MongoDB.")
+            # Otras acciones a realizar en caso de excepción
+
         except Exception as e:
-            self.logs.error(f"Error al verificar usuarios duplicados: {e}")
-            raise RuntimeError("Error al verificar usuarios duplicados") from e
+            # Manejo de otras excepciones
+            print("Ocurrió un error:", e)
+            # Otras acciones a realizar en caso de excepción
 
-    def get_user_by_email(self, email):
-        return Users.objects(email=email).first()
-    
-    def get_user_by_id(self, id_user):
-        return Users.objects(id=id_user).first()
+        finally:
+            # Acciones a realizar después del bloque try-except, como cerrar conexiones
+            if "client" in locals():
+                client.close()
 
-    def get_users_by_enterprise(self, enterprise):
-        return Users.objects(enterprise=enterprise)
-                
-    def add_field_to_user(self, field, user):
+    def delete_user(self, username, email):
         try:
-            user.fields.append(field)
-            user.save()
-            print(user.email)
-            self.logs.info('Se guardó el campo en el usuario')
+            user_dict = {"username": username, "email": email}
+            # Conectar al servidor MongoDB (por defecto, localhost:27017)
+            client = MongoClient(os.getenv("MONGODB_HOST"))
+
+            # Acceder a la base de datos
+            db = client[os.getenv("MONGODB_DB")]
+
+            # Acceder a la colección
+            collection = db["users"]
+
+            documentos = collection.find_one(
+                {
+                    "$or": [{"username": username, "email": email}],
+                    "activo": True,
+                },
+                {"password": 0},
+            )
+
+            if not documentos:
+                return "NO_EXISTE"
+
+            collection.update_one({"_id": documentos.get("_id")})
+
             return True
+
+        except ConnectionFailure:
+            # Manejo de la excepción ConnectionFailure
+            print("Error de conexión con la base de datos MongoDB.")
+            # Otras acciones a realizar en caso de excepción
+
         except Exception as e:
-            self.logs.warning(e)
-            return False
-        
+            # Manejo de otras excepciones
+            print("Ocurrió un error:", e)
+            # Otras acciones a realizar en caso de excepción
+
+        finally:
+            # Acciones a realizar después del bloque try-except, como cerrar conexiones
+            if "client" in locals():
+                client.close()
+
+    # def check_duplicate_usernames(self, usernames):
+    #     try:
+    #         # Buscar usernames duplicados en la base de datos
+    #         existing_users = Users.objects(username__in=usernames).only("username")
+    #         duplicates = [user.username for user in existing_users]
+    #         return duplicates
+    #     except Exception as e:
+    #         self.logs.error(f"Error al verificar usuarios duplicados: {e}")
+    #         raise RuntimeError("Error al verificar usuarios duplicados") from e
+
+    # def get_user_by_email(self, email):
+    #     return Users.objects(email=email).first()
+
+    # def get_user_by_id(self, id_user):
+    #     return Users.objects(id=id_user).first()
+
+    # def get_users_by_enterprise(self, enterprise):
+    #     return Users.objects(enterprise=enterprise)
+
+    # def add_field_to_user(self, field, user):
+    #     try:
+    #         user.fields.append(field)
+    #         user.save()
+    #         print(user.email)
+    #         self.logs.info("Se guardó el campo en el usuario")
+    #         return True
+    #     except Exception as e:
+    #         self.logs.warning(e)
+    #         return False
