@@ -21,7 +21,7 @@ logs = logger().get_logger()
 def get_all_podcasts():
     podcasts = podcast_service().get_all_podcasts()
     if podcasts != None:
-        return jsonify(podcasts=podcasts), 200
+        return jsonify(podcasts=podcasts.to_json()), 200
     else:
         return jsonify({"error": "No se pudo realizar la búsqueda de podcasts"}), 400    
     
@@ -29,21 +29,7 @@ def get_podcast_by_id():
     id_podcast = request.args.get('id')
     podcast = podcast_service().get_podcast_by_id(id_podcast)
     if podcast != None:
-        return jsonify(podcasts=podcast), 200
+        return jsonify(podcasts=podcast.to_json()), 200
     else:
         return jsonify({"error": "No se pudo realizar la búsqueda de podcasts"}), 400      
 
-"""def agregar_animal():
-
-    try:
-        data = request.get_json()
-        animal = animal_service().agregar_animal(
-            animal_type=data['animal_type'],
-            animal_quantity=data['animal_quantity'],
-        )
-        
-        return jsonify({"message": 'se creo correctamente'}), 200
-        
-    except Exception as e:
-        logs.warning('No se pudo guardar e animal por algún motivo' + e)
-        return jsonify({"error": "No se pudo agregar el animal a la BBDD"}), 400"""

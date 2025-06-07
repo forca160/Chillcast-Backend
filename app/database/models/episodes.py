@@ -1,7 +1,7 @@
 from app.database.database_config import db
 
 
-class episodes(db.EmbeddedDocument):
+class episodes(db.Document):
     title = db.StringField()
     description = db.StringField()
     duration_ms = db.IntField()

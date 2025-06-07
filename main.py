@@ -5,6 +5,7 @@ from flask_jwt_extended import JWTManager
 from app.database.database_config import Config, init_db
 from app.routes.podcast_routes import podcast_routes
 from app.routes.auth_routes import auth_routes
+from app.routes.jobs_route import jobs_routes
 from datetime import timedelta
 import os
 
@@ -44,15 +45,7 @@ def crear_app():
 
     app.register_blueprint(podcast_routes)
     app.register_blueprint(auth_routes)
-    """
-    app.register_blueprint(base_routes)
-    app.register_blueprint(field_routes)
-    app.register_blueprint(pasture_routes)
-    app.register_blueprint(operation_routes)
-    app.register_blueprint(animal_routes)
-    app.register_blueprint(mercado_pago_routes)
-    app.register_blueprint(suscriptipn_plan_routes)
-    """
+    app.register_blueprint(jobs_routes)
 
     return app
 

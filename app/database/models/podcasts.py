@@ -10,15 +10,20 @@ class podcasts(db.Document):
     image = db.StringField()
     author = db.StringField()
     GenreName = db.StringField()
-    episodes = db.EmbeddedDocumentListField(episodes)
-    
+    episodes = db.ListField(db.ReferenceField(episodes))
+    genero = db.ListField(db.StringField())
+    autores = db.ListField(db.StringField())
 
     def to_json(self):
         return {
             "id": str(self.id),
-            'description': [str(user.id) for user in self.users],  # Convertir cada referencia a su ObjectId
-            'fields': [field.to_json for field in self.fields],  # Convertir cada referencia a su ObjectId
-            "access_time": str(self.access_time),
-            "email_payer": self.email_payer if self.email_payer else None
+            "title": self.title,
+            'description': self.description,  # Convertir cada referencia a su ObjectId
+            "language": self.language,
+            "feed_url": self.feed_url,
+            "source": self.source,
+            "image": self.image,
+            "author": self.author,
+            "GenreName": self.GenreName
         }
     
