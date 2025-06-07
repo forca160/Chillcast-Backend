@@ -1,6 +1,12 @@
 from flask import request, Blueprint
 from flask_jwt_extended import jwt_required
-from app.controllers.auth_controller import register_user, login, delete
+from app.controllers.auth_controller import (
+    register_user,
+    login,
+    delete,
+    get_user_favorites,
+    post_user_favorites,
+)
 
 auth_routes = Blueprint("auth_routes", __name__, url_prefix="/api/v1/auth")
 
@@ -18,3 +24,13 @@ def iniciar_sesion():
 @auth_routes.route("/delete", methods=["DELETE"])
 def delete_user():
     return delete()
+
+
+@auth_routes.route("/favorites", methods=["GET"])
+def get_favorites():
+    return get_user_favorites()
+
+
+@auth_routes.route("/favorites", methods=["POST"])
+def post_favorites():
+    return post_user_favorites()

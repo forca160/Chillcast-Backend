@@ -142,7 +142,7 @@ class user_service:
 
             documentos = collection.find_one(
                 {
-                    "$or": [{"username": username, "email": email}],
+                    "$or": [{"username": username}, {"email": email}],
                     "activo": True,
                 },
                 {"password": 0},
@@ -172,32 +172,98 @@ class user_service:
             if "client" in locals():
                 client.close()
 
-    # def check_duplicate_usernames(self, usernames):
-    #     try:
-    #         # Buscar usernames duplicados en la base de datos
-    #         existing_users = Users.objects(username__in=usernames).only("username")
-    #         duplicates = [user.username for user in existing_users]
-    #         return duplicates
-    #     except Exception as e:
-    #         self.logs.error(f"Error al verificar usuarios duplicados: {e}")
-    #         raise RuntimeError("Error al verificar usuarios duplicados") from e
+    def get_favorites(self, username, email):
+        try:
+            # Conectar al servidor MongoDB (por defecto, localhost:27017)
+            client = MongoClient(os.getenv("MONGODB_HOST"))
 
-    # def get_user_by_email(self, email):
-    #     return Users.objects(email=email).first()
+            # Acceder a la base de datos
+            db = client[os.getenv("MONGODB_DB")]
 
-    # def get_user_by_id(self, id_user):
-    #     return Users.objects(id=id_user).first()
+            # Acceder a la colección usuarios
+            collection_users = db["users"]
 
-    # def get_users_by_enterprise(self, enterprise):
-    #     return Users.objects(enterprise=enterprise)
+            # Accede a la collecion de podcast
+            collection_podcast = db["podcasts"]
 
-    # def add_field_to_user(self, field, user):
-    #     try:
-    #         user.fields.append(field)
-    #         user.save()
-    #         print(user.email)
-    #         self.logs.info("Se guardó el campo en el usuario")
-    #         return True
-    #     except Exception as e:
-    #         self.logs.warning(e)
-    #         return False
+            documentos_usuarios = collection_users.find_one(
+                {
+                    "$or": [{"username": username}, {"email": email}],
+                    "activo": True,
+                },
+                {"password": 0},
+            )
+
+            if not documentos_usuarios:
+                return "NO_EXISTE_USUARIO"
+
+            if not documentos_usuarios.get("favorites", None):
+                return "NO_FAVORITOS"
+
+            documentos_podcast = collection_podcast.find(
+                {"_id": {"$in": documentos_usuarios.get("favorites")}}
+            )
+
+            if not documentos_podcast:
+                return "NO_FAVORITOS"
+
+            return self.json_document(documentos_podcast)
+
+        except ConnectionFailure:
+            # Manejo de la excepción ConnectionFailure
+            print("Error de conexión con la base de datos MongoDB.")
+            # Otras acciones a realizar en caso de excepción
+
+        except Exception as e:
+            # Manejo de otras excepciones
+            print("Ocurrió un error:", e)
+            # Otras acciones a realizar en caso de excepción
+
+        finally:
+            # Acciones a realizar después del bloque try-except, como cerrar conexiones
+            if "client" in locals():
+                client.close()
+
+    def post_favorites(self, username, email, podcast):
+        try:
+            # Conectar al servidor MongoDB (por defecto, localhost:27017)
+            client = MongoClient(os.getenv("MONGODB_HOST"))
+
+            # Acceder a la base de datos
+            db = client[os.getenv("MONGODB_DB")]
+
+            # Acceder a la colección usuarios
+            collection_users = db["users"]
+
+            documentos_usuarios = collection_users.find_one(
+                {
+                    "$or": [{"username": username}, {"email": email}],
+                    "activo": True,
+                },
+                {"password": 0},
+            )
+
+            if not documentos_usuarios:
+                return "NO_EXISTE_USUARIO"
+
+            documentos_usuarios = collection_users.update_one(
+                {"_id": ObjectId(documentos_usuarios.get("_id"))},
+                {"$addToSet": {"ids": podcast}},
+            )
+
+            return self.get_favorites(username, email)
+
+        except ConnectionFailure:
+            # Manejo de la excepción ConnectionFailure
+            print("Error de conexión con la base de datos MongoDB.")
+            # Otras acciones a realizar en caso de excepción
+
+        except Exception as e:
+            # Manejo de otras excepciones
+            print("Ocurrió un error:", e)
+            # Otras acciones a realizar en caso de excepción
+
+        finally:
+            # Acciones a realizar después del bloque try-except, como cerrar conexiones
+            if "client" in locals():
+                client.close()
