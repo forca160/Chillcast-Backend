@@ -46,26 +46,29 @@ class jobs_service:
 
     def update_podcasts_with_genre_and_authors(self, json_path):
         """
-        Lee un JSON local con una lista de documentos que incluyen _id.$oid (o 'id').
-        Para cada ID:
-        - Si no existe el campo 'autores', lo agrega como lista vacía.
-        - Si no existe el campo 'genero' , lo agrega como lista vacía.
+        Lee un JSON local donde cada objeto tiene:
+            - "_id": {"$oid": "<hexid>"} o "id": "<hexid>"
+            - "genero": [<string>, ...]
+            - "autores": [<string>, ...]
+        Y para cada entrada:
+            • Convierte el ID a ObjectId.
+            • Hace un $set de los valores de 'genero' y 'autores' tal cual aparecen en el JSON.
         """
-        # Obtenemos la colección PyMongo
+        # Acceso directo a la colección PyMongo
         coll = podcasts._get_collection()
 
-        # Cargar JSON local
+        # Cargo el JSON
         with open(json_path, 'r', encoding='utf-8') as f:
             docs = json.load(f)
 
-        updated = {"autores": 0, "genero": 0}
+        stats = {"total": 0, "updated": 0}
         for entry in docs:
-            # Extraer el ID, ya sea bajo '_id.$oid' o bajo 'id'
+            # 1) Extraer el HexID
             oid = None
-            if isinstance(entry.get('_id'), dict):
-                oid = entry['_id'].get('$oid')
-            elif entry.get('id'):
-                oid = entry['id']
+            if isinstance(entry.get("_id"), dict):
+                oid = entry["_id"].get("$oid")
+            elif entry.get("id"):
+                oid = entry["id"]
             if not oid:
                 continue
 
@@ -74,19 +77,24 @@ class jobs_service:
             except Exception:
                 continue
 
-            # Añadir 'autores' si falta
-            res1 = coll.update_one(
-                {'_id': obj_id, 'autores': {'$exists': False}},
-                {'$set': {'autores': []}}
-            )
-            updated["autores"] += res1.modified_count
+            # 2) Preparar el $set con lo que venga en el JSON
+            set_ops = {}
+            if "genero" in entry and isinstance(entry["genero"], list):
+                set_ops["genero"] = entry["genero"]
+            if "autores" in entry and isinstance(entry["autores"], list):
+                set_ops["autores"] = entry["autores"]
 
-            # Añadir 'genero' si falta
-            res2 = coll.update_one(
-                {'_id': obj_id, 'genero':  {'$exists': False}},
-                {'$set': {'genero': []}}
-            )
-            updated["genero"] += res2.modified_count
+            if not set_ops:
+                continue
 
-        print(f"Campos inicializados: autores={updated['autores']}, genero={updated['genero']}")
-        return updated
+            # 3) Ejecutar la actualización
+            result = coll.update_one(
+                {"_id": obj_id},
+                {"$set": set_ops}
+            )
+            stats["total"] += 1
+            if result.modified_count:
+                stats["updated"] += 1
+
+        print(f"Procesados: {stats['total']} entradas, actualizados: {stats['updated']}")
+        return stats
