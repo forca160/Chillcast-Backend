@@ -248,7 +248,7 @@ class user_service:
 
             documentos_usuarios = collection_users.update_one(
                 {"_id": ObjectId(documentos_usuarios.get("_id"))},
-                {"$addToSet": {"ids": podcast}},
+                {"$addToSet": {"favorites": podcast}},
             )
 
             return self.get_favorites(username, email)
