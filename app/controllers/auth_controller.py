@@ -67,17 +67,16 @@ def delete():
 def get_user_favorites():
     username = request.args.get("username", None)
     email = request.args.get("email", None)
+    favorites = user_service().get_favorites(username, email)
 
-    user = user_service.get_favorites(username, email)
-
-    if user == "NO_EXISTE_USUARIO":
+    if favorites == "NO_EXISTE_USUARIO":
         return jsonify({"error": "El username o email no existen"}), 409
-    elif user == "NO_FAVORITOS":
+    elif favorites == "NO_FAVORITOS":
         return jsonify({"error": "El usuario no tiene podcast favoritos"}), 404
-    elif not user:
-        return jsonify({"error": "No se pudo borrar el usuario"}), 400
+    elif not favorites:
+        return jsonify({"error": "No se pudieron obtener los favoritos"}), 400
     else:
-        return jsonify(user=user), 200
+        return jsonify(favorites=favorites), 200
 
 
 def post_user_favorites():
@@ -89,13 +88,43 @@ def post_user_favorites():
     if not podcast:
         return jsonify({"error": "Campo podcast obligatorio"}), 400
 
-    user = user_service.post_favorites(username, email, podcast)
+    agrega = user_service().post_favorites(username, email, podcast)
 
-    if user == "NO_EXISTE_USUARIO":
-        return jsonify({"error": "El username o email no existen"}), 409
-    elif user == "NO_FAVORITOS":
-        return jsonify({"error": "El usuario no tiene podcast favoritos"}), 404
-    elif not user:
-        return jsonify({"error": "No se pudo borrar el usuario"}), 400
+    if agrega:
+        favorites = user_service().get_favorites(username, email)
     else:
-        return jsonify(user=user), 200
+        favorites = None
+
+    if favorites == "NO_EXISTE_USUARIO":
+        return jsonify({"error": "El username o email no existen"}), 409
+    elif favorites == "NO_FAVORITOS":
+        return jsonify({"error": "El usuario no tiene podcast favoritos"}), 404
+    elif not favorites:
+        return jsonify({"error": "No se pudieron obtener los favoritos"}), 400
+    else:
+        return jsonify(favorites=favorites), 200
+
+
+def delete_user_favorites():
+    username = request.args.get("username", None)
+    email = request.args.get("email", None)
+    podcast = request.json.get("podcast", None)
+
+    if not podcast:
+        return jsonify({"error": "Campo podcast obligatorio"}), 400
+
+    borra = user_service().delete_favorites(username, email, podcast)
+
+    if borra:
+        favorites = user_service().get_favorites(username, email)
+    else:
+        favorites = None
+
+    if favorites == "NO_EXISTE_USUARIO":
+        return jsonify({"error": "El username o email no existen"}), 409
+    elif favorites == "NO_FAVORITOS":
+        return jsonify({"error": "El usuario no tiene podcast favoritos"}), 404
+    elif not favorites:
+        return jsonify({"error": "No se pudieron obtener los favoritos"}), 400
+    else:
+        return jsonify(favorites=favorites), 200
