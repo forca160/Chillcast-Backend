@@ -60,7 +60,7 @@ class user_service:
             post_id = collection.insert_one(user_dict).inserted_id
             documentos = collection.find(
                 {"_id": ObjectId(post_id)},
-                {"password": 0},
+                {"password": 0, "favorites": 0},
             )
             return self.json_document(documentos)
 
@@ -105,7 +105,7 @@ class user_service:
                     "password": password,
                     "activo": True,
                 },
-                {"password": 0},
+                {"password": 0, "favorites": 0},
             )
 
             if not documentos:
@@ -200,12 +200,21 @@ class user_service:
             if not documentos_usuarios.get("favorites", None):
                 return "NO_FAVORITOS"
 
-            documentos_podcast = collection_podcast.find(
-                {"_id": {"$in": documentos_usuarios.get("favorites")}}
+            favorites = [
+                ObjectId(fav) for fav in documentos_usuarios.get("favorites", [])
+            ]
+
+            documentos_podcast = list(
+                collection_podcast.find({"_id": {"$in": favorites}})
             )
 
             if not documentos_podcast:
                 return "NO_FAVORITOS"
+
+            for doc in documentos_podcast:
+                doc["episodes"] = [str(ep) for ep in doc.get("episodes")]
+
+            print(documentos_podcast)
 
             return self.json_document(documentos_podcast)
 
@@ -251,7 +260,51 @@ class user_service:
                 {"$addToSet": {"favorites": podcast}},
             )
 
-            return self.get_favorites(username, email)
+            return True
+
+        except ConnectionFailure:
+            # Manejo de la excepción ConnectionFailure
+            print("Error de conexión con la base de datos MongoDB.")
+            # Otras acciones a realizar en caso de excepción
+
+        except Exception as e:
+            # Manejo de otras excepciones
+            print("Ocurrió un error:", e)
+            # Otras acciones a realizar en caso de excepción
+
+        finally:
+            # Acciones a realizar después del bloque try-except, como cerrar conexiones
+            if "client" in locals():
+                client.close()
+
+    def delete_favorites(self, username, email, podcast):
+        try:
+            # Conectar al servidor MongoDB (por defecto, localhost:27017)
+            client = MongoClient(os.getenv("MONGODB_HOST"))
+
+            # Acceder a la base de datos
+            db = client[os.getenv("MONGODB_DB")]
+
+            # Acceder a la colección usuarios
+            collection_users = db["users"]
+
+            documentos_usuarios = collection_users.find_one(
+                {
+                    "$or": [{"username": username}, {"email": email}],
+                    "activo": True,
+                },
+                {"password": 0},
+            )
+
+            if not documentos_usuarios:
+                return "NO_EXISTE_USUARIO"
+
+            documentos_usuarios = collection_users.update_one(
+                {"_id": ObjectId(documentos_usuarios.get("_id"))},
+                {"$pull": {"favorites": podcast}},
+            )
+
+            return True
 
         except ConnectionFailure:
             # Manejo de la excepción ConnectionFailure
