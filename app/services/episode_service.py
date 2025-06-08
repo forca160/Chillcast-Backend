@@ -1,4 +1,4 @@
-# from app.database.models.podcasts import podcasts
+from app.database.models.podcasts import podcasts
 from app.utils.logger import logger
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
@@ -74,3 +74,16 @@ class episode_service:
             # Acciones a realizar después del bloque try-except, como cerrar conexiones
             if "client" in locals():
                 client.close()
+
+    def get_episodes_by_podcast(self, podcast_id):
+
+        podcast = podcasts.objects(id=podcast_id).first()
+
+        episodes_data = []
+        for ep in podcast.episodes:
+            episodes_data.append({
+                'title': ep.title,
+                'description': ep.description,
+                # agregá más campos según tu modelo
+        })
+        return episodes_data

@@ -14,3 +14,4 @@ def crear_genero():
     print(request.json.get('genero'))
     return genero_service().create_gender(request.json.get('genero'))
 
+
