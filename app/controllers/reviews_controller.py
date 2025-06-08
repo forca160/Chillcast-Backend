@@ -76,7 +76,7 @@ def delete_user_review():
     if not reviews_service().delete_user_reviews(review):
         return jsonify({"error": "No se pudieron obtener los favoritos"}), 400
 
-    reviews = reviews_service().get_user_reviews(username, email, podcast=podcast)
+    reviews = reviews_service().get_user_reviews(podcast=podcast)
 
     if reviews == "NO_EXISTE_USUARIO":
         return jsonify({"error": "El username o email no existen"}), 409
