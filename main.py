@@ -6,6 +6,7 @@ from app.database.database_config import Config, init_db
 from app.routes.podcast_routes import podcast_routes
 from app.routes.auth_routes import auth_routes
 from app.routes.jobs_route import jobs_routes
+from app.routes.reviews_router import reviews_routes
 from datetime import timedelta
 import os
 
@@ -46,6 +47,7 @@ def crear_app():
     app.register_blueprint(podcast_routes)
     app.register_blueprint(auth_routes)
     app.register_blueprint(jobs_routes)
+    app.register_blueprint(reviews_routes)
 
     return app
 
