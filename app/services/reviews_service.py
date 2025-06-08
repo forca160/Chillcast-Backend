@@ -120,3 +120,34 @@ class reviews_service:
             # Acciones a realizar después del bloque try-except, como cerrar conexiones
             if "client" in locals():
                 client.close()
+
+    def delete_user_reviews(self, id_review):
+        # Verificar si el usuario ya está registrado
+        try:
+            # Conectar al servidor MongoDB (por defecto, localhost:27017)
+            client = MongoClient(os.getenv("MONGODB_HOST"))
+
+            # Acceder a la base de datos
+            db = client[os.getenv("MONGODB_DB")]
+
+            # Acceder a la colección
+            collection_reviews = db["reviews"]
+
+            collection_reviews.delete_one({"_id": ObjectId(id_review)})
+
+            return True
+
+        except ConnectionFailure:
+            # Manejo de la excepción ConnectionFailure
+            print("Error de conexión con la base de datos MongoDB.")
+            # Otras acciones a realizar en caso de excepción
+
+        except Exception as e:
+            # Manejo de otras excepciones
+            print("Ocurrió un error:", e)
+            # Otras acciones a realizar en caso de excepción
+
+        finally:
+            # Acciones a realizar después del bloque try-except, como cerrar conexiones
+            if "client" in locals():
+                client.close()

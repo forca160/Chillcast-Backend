@@ -1,6 +1,10 @@
 from flask import request, Blueprint
 from flask_jwt_extended import jwt_required
-from app.controllers.reviews_controller import post_user_review, get_user_review
+from app.controllers.reviews_controller import (
+    post_user_review,
+    get_user_review,
+    delete_user_review,
+)
 
 reviews_routes = Blueprint("reviews_routes", __name__, url_prefix="/api/v1/reviews")
 
@@ -13,3 +17,8 @@ def post_review():
 @reviews_routes.route("", methods=["GET"])
 def get_review():
     return get_user_review()
+
+
+@reviews_routes.route("", methods=["DELETE"])
+def delete_review():
+    return delete_user_review()

@@ -25,13 +25,11 @@ def post_user_review():
     if not podcast:
         return jsonify({"error": "Campo podcast obligatorio"}), 400
 
-    post = reviews_service().create_user_review(
+    if not reviews_service().create_user_review(
         username,
         email,
         {"comment": comment, "qualification": qualification, "podcast_id": podcast},
-    )
-
-    if not post:
+    ):
         return jsonify({"error": "No se pudieron obtener los favoritos"}), 400
 
     reviews = reviews_service().get_user_reviews(podcast=podcast)
@@ -52,6 +50,33 @@ def get_user_review():
     podcast = request.args.get("podcast", None)
 
     reviews = reviews_service().get_user_reviews(username, email, review, podcast)
+
+    if reviews == "NO_EXISTE_USUARIO":
+        return jsonify({"error": "El username o email no existen"}), 409
+    if reviews == "NO_EXISTEN_COMENTARIOS":
+        return (
+            jsonify({"error": "No existen comentarios para los parametros ingresados"}),
+            404,
+        )
+    if not reviews:
+        return jsonify({"error": "No se pudieron obtener los favoritos"}), 400
+    else:
+        return jsonify(reviews=reviews), 200
+
+
+def delete_user_review():
+    username = request.args.get("username", None)
+    email = request.args.get("email", None)
+    review = request.args.get("review", None)
+    podcast = request.args.get("podcast", None)
+
+    if not review:
+        return jsonify({"error": "Campo review obligatorio"}), 400
+
+    if not reviews_service().delete_user_reviews(review):
+        return jsonify({"error": "No se pudieron obtener los favoritos"}), 400
+
+    reviews = reviews_service().get_user_reviews(username, email, podcast=podcast)
 
     if reviews == "NO_EXISTE_USUARIO":
         return jsonify({"error": "El username o email no existen"}), 409
