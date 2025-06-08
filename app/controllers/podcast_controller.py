@@ -44,21 +44,20 @@ def get_podcast_by_id():
     if podcast != None:
         # Serializamos los resultados manualmente
         resultado = []
-        for p in podcast:
-            resultado.append(
-                {
-                    "GenreName": p.genero,
-                    "author": p.autores,
-                    "description": p.description,
-                    "feed_url": p.feed_url,
-                    "_id": str(p.id),
-                    "image": p.image,
-                    "language": p.language,
-                    "source": p.source,
-                    "title": p.title,
-                    # Agregá más campos si querés
-                }
-            )
+        resultado.append(
+            {
+                "GenreName": podcast.genero,
+                "author": podcast.autores,
+                "description": podcast.description,
+                "feed_url": podcast.feed_url,
+                "_id": str(podcast.id),
+                "image": podcast.image,
+                "language": podcast.language,
+                "source": podcast.source,
+                "title": podcast.title,
+                # Agregá más campos si querés
+            }
+        )
         return jsonify(podcasts=resultado), 200
     else:
         return jsonify({"error": "No se pudo realizar la búsqueda de podcasts"}), 400
