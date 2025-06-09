@@ -50,12 +50,12 @@ class user_service:
             # Acceder a la colección
             collection = db["users"]
 
-            data = collection.find_one(
-                {"$or": [{"username": username}, {"email": email}]}
-            )
-            print(data)
-            if data:
-                return "YA_EXISTE"
+            data_username = collection.find_one({"username": username})
+            if data_username:
+                return "YA_EXISTE_USERNAME"
+            data_email = collection.find_one({"email": email})
+            if data_email:
+                return "YA_EXISTE_EMAIL"
 
             post_id = collection.insert_one(user_dict).inserted_id
             documentos = collection.find(
@@ -79,13 +79,53 @@ class user_service:
             if "client" in locals():
                 client.close()
 
-    def edit_user(self, user, data):
-        for key, value in data.items():
-            if hasattr(user, key):
-                setattr(user, key, value)
+    def edit_user(self, username, email, data):
+        # Verificar si el usuario ya está registrado
+        try:
+            client = MongoClient(os.getenv("MONGODB_HOST"))
 
-        user.save()
-        return user
+            # Acceder a la base de datos
+            db = client[os.getenv("MONGODB_DB")]
+
+            # Acceder a la colección
+            collection = db["users"]
+
+            documentos_usuarios = collection.find_one(
+                {
+                    "$or": [{"username": username}, {"email": email}],
+                    "activo": True,
+                },
+                {"password": 0},
+            )
+
+            if not documentos_usuarios:
+                return "NO_EXISTE_USUARIO"
+            collection.update_one(
+                {"_id": documentos_usuarios.get("_id")}, {"$set": data}
+            )
+            documentos = list(
+                collection.find(
+                    {
+                        "_id": documentos_usuarios.get("_id"),
+                    },
+                    {"password": 0},
+                )
+            )
+            return self.json_document(documentos)
+        except ConnectionFailure:
+            # Manejo de la excepción ConnectionFailure
+            print("Error de conexión con la base de datos MongoDB.")
+            # Otras acciones a realizar en caso de excepción
+
+        except Exception as e:
+            # Manejo de otras excepciones
+            print("Ocurrió un error:", e)
+            # Otras acciones a realizar en caso de excepción
+
+        finally:
+            # Acciones a realizar después del bloque try-except, como cerrar conexiones
+            if "client" in locals():
+                client.close()
 
     def verify_user(self, username, email, password):
         try:

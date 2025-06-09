@@ -7,6 +7,7 @@ from app.controllers.auth_controller import (
     get_user_favorites,
     post_user_favorites,
     delete_user_favorites,
+    edit_user,
 )
 
 auth_routes = Blueprint("auth_routes", __name__, url_prefix="/api/v1/auth")
@@ -40,3 +41,8 @@ def post_favorites():
 @auth_routes.route("/favorites", methods=["DELETE"])
 def delete_favorites():
     return delete_user_favorites()
+
+
+@auth_routes.route("/edit-user", methods=["PUT"])
+def put_user():
+    return edit_user()

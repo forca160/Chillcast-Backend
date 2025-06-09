@@ -23,8 +23,10 @@ def register_user():
         request.json.get("generos"),
     )
 
-    if user == "YA_EXISTE":
-        return jsonify({"error": "El username o email ya existen"}), 409
+    if user == "YA_EXISTE_USERNAME":
+        return jsonify({"error": "El username ya existe"}), 409
+    elif user == "YA_EXISTE_EMAIL":
+        return jsonify({"error": "El email ya existe"}), 409
     elif not user:
         return jsonify({"error": "No se pudo insertar el usuario"}), 400
     else:
@@ -51,8 +53,8 @@ def login():
 
 def delete():
     """ """
-    username = request.json.get("username", None)
-    email = request.json.get("email", None)
+    username = request.args.get("username", None)
+    email = request.args.get("email", None)
 
     user = user_service().delete_user(username, email)
 
@@ -128,3 +130,23 @@ def delete_user_favorites():
         return jsonify({"error": "No se pudieron obtener los favoritos"}), 400
     else:
         return jsonify(favorites=favorites), 200
+
+
+def edit_user():
+    username = request.args.get("username", None)
+    email = request.args.get("email", None)
+    data = {
+        "generos": request.json.get("generos", None),
+        "nombre": request.json.get("nombre", None),
+        "apellido": request.json.get("apellido", None),
+    }
+    user = user_service().edit_user(
+        username, email, {k: v for k, v in data.items() if v}
+    )
+
+    if user == "NO_EXISTE_USUARIO":
+        return jsonify({"error": "El username o email no existen"}), 409
+    elif not user:
+        return jsonify({"error": "No se pudo actualizar usuario"}), 400
+    else:
+        return jsonify(user=user), 200
