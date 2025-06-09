@@ -55,13 +55,35 @@ class podcast_service():
 
         return podcastss
     
-    def get_podcasts_by_author(self, author_name):    
 
-        posibles = podcasts.objects(autores__exists=True)
+    def buscar_podcasts(self, filtros):
+        query = Q()
 
-        filtrados = []
-        for p in posibles:
-            if any(author_name.lower() in autor.lower() for autor in p.autores):
-                filtrados.append(p)
 
-        return filtrados
+        # Filtro por título (campo simple)
+        if 'title' in filtros and filtros['title']:
+            query &= Q(title__icontains=filtros['title'])
+
+        # Filtro por autor (lista de strings, requiere filtrado manual)
+        if 'autores' in filtros and filtros['autores']:
+            autor_buscado = filtros['autores'].lower()
+            posibles = podcasts.objects(query & Q(autores__exists=True))
+            resultados = []
+            for p in posibles:
+                if any(autor_buscado in autor.lower() for autor in p.autores):
+                    resultados.append(p)
+            return resultados # Salida anticipada si hay filtro por autor
+
+        # Filtro por género (lista de strings, requiere filtrado manual)
+        if 'genero' in filtros and filtros['genero']:
+            genero_buscado = filtros['genero'].lower()
+            posibles = podcasts.objects(query & Q(genero__exists=True))
+            resultados = []
+            for p in posibles:
+                if any(genero_buscado in g.lower() for g in p.genero):
+                    resultados.append(p)
+            return resultados # Salida anticipada si hay filtro por género
+
+        # Si solo hay filtro por título o ninguno
+        return podcasts.objects(query)
+

@@ -118,3 +118,25 @@ def get_podcasts_by_author():
         return jsonify(podcasts=resultado), 200
     else:
         return jsonify({"error": "No se encontraron podcasts con ese autor"}), 404
+
+
+def get_podcasts_by_filters():
+    
+    filtros = {}
+
+    title = request.args.get('title')
+    if title:
+        filtros['title'] = title
+
+    autores = request.args.get('autores')
+    if autores:
+        filtros['autores'] = autores
+
+    genero = request.args.get('genero')
+    if genero:
+        filtros['genero'] = genero
+
+    resultado = podcast_service().buscar_podcasts(filtros)
+    resultado = [podcast.to_json() for podcast in resultado]
+    return jsonify(podcasts=resultado), 200
+    

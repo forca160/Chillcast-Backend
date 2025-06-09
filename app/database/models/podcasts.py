@@ -23,7 +23,7 @@ class podcasts(db.Document):
             "feed_url": self.feed_url,
             "source": self.source,
             "image": self.image,
-            "author": self.author,
-            "GenreName": self.GenreName
+            "generos": self.genero,
+            "autores": self.autores
         }
     
