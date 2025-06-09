@@ -51,10 +51,13 @@ class user_service:
             collection = db["users"]
 
             data_username = collection.find_one({"username": username})
-            if data_username:
-                return "YA_EXISTE_USERNAME"
             data_email = collection.find_one({"email": email})
-            if data_email:
+
+            if data_username and data_email:
+                return "YA_EXISTEN_AMBOS"
+            elif data_username:
+                return "YA_EXISTE_USERNAME"
+            elif data_email:
                 return "YA_EXISTE_EMAIL"
 
             post_id = collection.insert_one(user_dict).inserted_id

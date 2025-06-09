@@ -22,8 +22,9 @@ def register_user():
         request.json.get("apellido"),
         request.json.get("generos"),
     )
-
-    if user == "YA_EXISTE_USERNAME":
+    if user == "YA_EXISTEN_AMBOS":
+        return jsonify({"error": "El username y email ya existen"}), 409
+    elif user == "YA_EXISTE_USERNAME":
         return jsonify({"error": "El username ya existe"}), 409
     elif user == "YA_EXISTE_EMAIL":
         return jsonify({"error": "El email ya existe"}), 409
