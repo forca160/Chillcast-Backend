@@ -2,6 +2,7 @@ from flask import jsonify
 from bson import ObjectId
 from app.database.models.podcasts import podcasts
 from app.database.models.episodes import episodes
+from app.database.models.source import source
 import json
 
 class jobs_service:
@@ -40,9 +41,6 @@ class jobs_service:
             )
 
         return jsonify({"message": "Migración completada"}), 200
-    
-
-
 
     def update_podcasts_with_genre_and_authors(self, json_path):
         """
@@ -98,3 +96,12 @@ class jobs_service:
 
         print(f"Procesados: {stats['total']} entradas, actualizados: {stats['updated']}")
         return stats
+    
+
+    def update_source(self, source_name):
+        fuente = source(
+            source_name=source_name
+        )
+        fuente.save()
+
+        return jsonify(fuente=fuente.to_json())

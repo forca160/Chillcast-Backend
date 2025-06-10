@@ -55,35 +55,46 @@ class podcast_service():
 
         return podcastss
     
-
     def buscar_podcasts(self, filtros):
         query = Q()
 
-
-        # Filtro por título (campo simple)
-        if 'title' in filtros and filtros['title']:
+        if 'title' in filtros:
             query &= Q(title__icontains=filtros['title'])
 
-        # Filtro por autor (lista de strings, requiere filtrado manual)
-        if 'autores' in filtros and filtros['autores']:
+        if 'source' in filtros:
+            query &= Q(source__icontains=filtros['source'])
+
+        posibles = podcasts.objects(query)
+
+        # Filtro por autor
+        if 'autores' in filtros:
             autor_buscado = filtros['autores'].lower()
-            posibles = podcasts.objects(query & Q(autores__exists=True))
-            resultados = []
-            for p in posibles:
-                if any(autor_buscado in autor.lower() for autor in p.autores):
-                    resultados.append(p)
-            return resultados # Salida anticipada si hay filtro por autor
+            posibles = [p for p in posibles if any(autor_buscado in autor.lower() for autor in p.autores)]
 
-        # Filtro por género (lista de strings, requiere filtrado manual)
-        if 'genero' in filtros and filtros['genero']:
+        # Filtro por género
+        if 'genero' in filtros:
             genero_buscado = filtros['genero'].lower()
-            posibles = podcasts.objects(query & Q(genero__exists=True))
-            resultados = []
-            for p in posibles:
-                if any(genero_buscado in g.lower() for g in p.genero):
-                    resultados.append(p)
-            return resultados # Salida anticipada si hay filtro por género
+            posibles = [p for p in posibles if any(genero_buscado in g.lower() for g in p.genero)]
 
-        # Si solo hay filtro por título o ninguno
-        return podcasts.objects(query)
+        # Filtro por duración promedio de los primeros 3 episodios
+        if 'duracion' in filtros:
+            duracion_max_min = filtros['duracion']
+            filtrados = []
+            for p in posibles:
+                episodios = p.episodes[:3]  # primeros 3 episodios
+                if not episodios:
+                    continue
+                duraciones = [ep.duration_ms for ep in episodios if hasattr(ep, 'duration_ms') and ep.duration_ms]
+                if not duraciones:
+                    continue
+                promedio_ms = sum(duraciones) / len(duraciones)
+                promedio_min = promedio_ms / 60000  # convertir a minutos
+                if promedio_min <= duracion_max_min:
+                    filtrados.append(p)
+            posibles = filtrados
+
+        return posibles
+
+
+
 

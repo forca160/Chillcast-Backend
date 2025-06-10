@@ -20,7 +20,6 @@ class podcasts(db.Document):
             "title": self.title,
             'description': self.description,  # Convertir cada referencia a su ObjectId
             "language": self.language,
-            "feed_url": self.feed_url,
             "source": self.source,
             "image": self.image,
             "generos": self.genero,

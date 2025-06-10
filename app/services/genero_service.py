@@ -1,4 +1,5 @@
 from app.database.models.genero import genero
+from app.database.models.source import source
 from app.utils.logger import logger
 from flask import jsonify
 from bson import ObjectId
@@ -41,3 +42,7 @@ class genero_service():
             # Manejo de otras excepciones
             print("Ocurrió un error:", e)
             # Otras acciones a realizar en caso de excepción        
+    
+    def get_all_sources(self):
+        fuentes = source.objects()
+        return jsonify(fuentes=fuentes.to_json())

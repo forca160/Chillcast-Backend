@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, request
 from app.services.jobs_service import jobs_service
 
 
@@ -17,3 +17,8 @@ def updated_epi():
     Si no envías 'ids', inicializa todos los podcasts.
     """
     return jobs_service().update_podcasts_with_genre_and_authors('update.json')
+
+@jobs_routes.route('/2', methods=['POST'])
+def updated_source():
+    data = request.get_json()
+    return jobs_service().update_source(data['source'])

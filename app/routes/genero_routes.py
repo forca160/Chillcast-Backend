@@ -14,4 +14,9 @@ def crear_genero():
     print(request.json.get('genero'))
     return genero_service().create_gender(request.json.get('genero'))
 
+@genero_routes.route('/source', methods=['GET'])
+def obtener_fuente():
+    return genero_service().get_all_sources()
+
+
 

@@ -136,7 +136,19 @@ def get_podcasts_by_filters():
     if genero:
         filtros['genero'] = genero
 
+    source = request.args.get('source')
+    if source:
+        filtros['source'] = source
+
+    duracion = request.args.get('duracion')
+    if duracion:
+        try:
+            filtros['duracion'] = int(duracion)
+        except ValueError:
+            pass  # Ignorar si no es un número válido
+
     resultado = podcast_service().buscar_podcasts(filtros)
     resultado = [podcast.to_json() for podcast in resultado]
+
     return jsonify(podcasts=resultado), 200
     
