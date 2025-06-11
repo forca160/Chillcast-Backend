@@ -15,28 +15,9 @@ logs = logger().get_logger()
 
 def get_all_podcasts():
     podcasts = podcast_service().get_all_podcasts()
-    if podcasts != None:
-        # Serializamos los resultados manualmente
-        resultado = []
-        for p in podcasts:
-            resultado.append(
-                {
-                    "GenreName": p.genero,
-                    "author": p.autores,
-                    "description": p.description,
-                    "feed_url": p.feed_url,
-                    "_id": str(p.id),
-                    "image": p.image,
-                    "language": p.language,
-                    "source": p.source,
-                    "title": p.title,
-                    # Agregá más campos si querés
-                }
-            )
-        return jsonify(podcasts=resultado), 200
-    else:
-        return jsonify({"error": "No se pudo realizar la búsqueda de podcasts"}), 400
-
+    podcasts = [podcast.to_json() for podcast in podcasts]
+    return jsonify(podcasts=podcasts), 200
+    
 
 def get_podcast_by_id():
     id_podcast = request.args.get("id")
@@ -51,29 +32,10 @@ def get_podcast_by_id():
 
 def get_podcasts_by_genders():
     generos = request.args.getlist("generos")
-    podcast = podcast_service().get_podcasts_by_gender(generos)
-    if podcast != None:
-        # Serializamos los resultados manualmente
-        resultado = []
-        for p in podcast:
-            resultado.append(
-                {
-                    "GenreName": p.genero,
-                    "author": p.autores,
-                    "description": p.description,
-                    "feed_url": p.feed_url,
-                    "_id": str(p.id),
-                    "image": p.image,
-                    "language": p.language,
-                    "source": p.source,
-                    "title": p.title,
-                    # Agregá más campos si querés
-                }
-            )
-        return jsonify(podcasts=resultado), 200
-    else:
-        return jsonify({"error": "No se pudo realizar la búsqueda de podcasts"}), 400
-
+    podcasts = podcast_service().get_podcasts_by_gender(generos)
+    podcasts = [podcast.to_json() for podcast in podcasts]
+    return jsonify(podcasts=podcasts), 200
+        
 
 def get_podcasts_by_author():
 
@@ -105,8 +67,6 @@ def get_podcasts_by_author():
     else:
         return jsonify({"error": "No se encontraron podcasts con ese autor"}), 404
 
-
-from flask import request, jsonify
 
 def get_podcasts_by_filters():
     filtros = {}
