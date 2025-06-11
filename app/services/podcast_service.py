@@ -56,40 +56,42 @@ class podcast_service():
         return podcastss
     
     def buscar_podcasts(self, filtros):
+        # 1) Filtros directos en Mongo
         query = Q()
-
         if 'title' in filtros:
             query &= Q(title__icontains=filtros['title'])
-
         if 'source' in filtros:
             query &= Q(source__icontains=filtros['source'])
+        if 'generos' in filtros:
+            query &= Q(genero__all=filtros['generos'])
 
-        posibles = podcasts.objects(query)
+        posibles = list(podcasts.objects(query))
 
-        # Filtro por autor
+        # 2) Filtro por autor (en Python)
         if 'autores' in filtros:
             autor_buscado = filtros['autores'].lower()
-            posibles = [p for p in posibles if any(autor_buscado in autor.lower() for autor in p.autores)]
+            posibles = [
+                p for p in posibles
+                if any(autor_buscado in autor.lower() for autor in p.autores)
+            ]
 
-        # Filtro por género
-        if 'genero' in filtros:
-            genero_buscado = filtros['genero'].lower()
-            posibles = [p for p in posibles if any(genero_buscado in g.lower() for g in p.genero)]
-
-        # Filtro por duración promedio de los primeros 3 episodios
-        if 'duracion' in filtros:
-            duracion_max_min = filtros['duracion']
+        # 3) Filtro por RANGO de duración promedio de primeros 3 episodios
+        dur_min = filtros.get('duracion_min')
+        dur_max = filtros.get('duracion_max')
+        if dur_min is not None or dur_max is not None:
             filtrados = []
             for p in posibles:
-                episodios = p.episodes[:3]  # primeros 3 episodios
-                if not episodios:
+                eps = p.episodes[:3]
+                if not eps:
                     continue
-                duraciones = [ep.duration_ms for ep in episodios if hasattr(ep, 'duration_ms') and ep.duration_ms]
-                if not duraciones:
+                # calculamos promedio en minutos
+                ms_vals = [ep.duration_ms for ep in eps if getattr(ep, 'duration_ms', None)]
+                if not ms_vals:
                     continue
-                promedio_ms = sum(duraciones) / len(duraciones)
-                promedio_min = promedio_ms / 60000  # convertir a minutos
-                if promedio_min <= duracion_max_min:
+                prom_min = sum(ms_vals) / len(ms_vals) / 60000
+                # chequeo rango (si uno es None, sólo aplico el otro)
+                if ((dur_min is None or prom_min >= dur_min) and
+                    (dur_max is None or prom_min <= dur_max)):
                     filtrados.append(p)
             posibles = filtrados
 

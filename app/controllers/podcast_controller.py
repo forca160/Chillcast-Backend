@@ -120,8 +120,9 @@ def get_podcasts_by_author():
         return jsonify({"error": "No se encontraron podcasts con ese autor"}), 404
 
 
+from flask import request, jsonify
+
 def get_podcasts_by_filters():
-    
     filtros = {}
 
     title = request.args.get('title')
@@ -132,23 +133,29 @@ def get_podcasts_by_filters():
     if autores:
         filtros['autores'] = autores
 
-    genero = request.args.get('genero')
-    if genero:
-        filtros['genero'] = genero
+    # Soporte para múltiples géneros (AND)
+    generos = request.args.getlist('genero')
+    if len(generos) == 1 and ',' in generos[0]:
+        generos = [g.strip() for g in generos[0].split(',') if g.strip()]
+    if generos:
+        filtros['generos'] = generos
 
     source = request.args.get('source')
     if source:
         filtros['source'] = source
 
-    duracion = request.args.get('duracion')
-    if duracion:
-        try:
-            filtros['duracion'] = int(duracion)
-        except ValueError:
-            pass  # Ignorar si no es un número válido
+    # ------ NUEVO: RANGO de duración ------
+    dur_min = request.args.get('duracion_min')
+    dur_max = request.args.get('duracion_max')
+    try:
+        if dur_min is not None:
+            filtros['duracion_min'] = float(dur_min)
+        if dur_max is not None:
+            filtros['duracion_max'] = float(dur_max)
+    except ValueError:
+        # Si no son números válidos, ignoramos el filtro
+        pass
 
     resultado = podcast_service().buscar_podcasts(filtros)
-    resultado = [podcast.to_json() for podcast in resultado]
-
+    resultado = [pod.to_json() for pod in resultado]
     return jsonify(podcasts=resultado), 200
-    
