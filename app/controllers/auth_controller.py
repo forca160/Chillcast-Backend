@@ -151,3 +151,17 @@ def edit_user():
         return jsonify({"error": "No se pudo actualizar usuario"}), 400
     else:
         return jsonify(user=user), 200
+
+
+def user_me():
+    username = request.args.get("username", None)
+    email = request.args.get("email", None)
+
+    user = user_service().user_me(username, email)
+
+    if user == "NO_EXISTE":
+        return jsonify({"error": "El username o email no existen"}), 409
+    elif not user:
+        return jsonify({"error": "No se pudo borrar el usuario"}), 400
+    else:
+        return jsonify(user=user), 200

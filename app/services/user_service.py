@@ -130,6 +130,44 @@ class user_service:
             if "client" in locals():
                 client.close()
 
+    def user_me(self, username, email):
+        try:
+            # Conectar al servidor MongoDB (por defecto, localhost:27017)
+            client = MongoClient(os.getenv("MONGODB_HOST"))
+
+            # Acceder a la base de datos
+            db = client[os.getenv("MONGODB_DB")]
+
+            # Acceder a la colección
+            collection = db["users"]
+
+            documentos = collection.find(
+                {
+                    "$or": [{"username": username}, {"email": email}],
+                },
+                {"password": 0, "favorites": 0},
+            )
+
+            if not documentos:
+                return "NO_EXISTE"
+
+            return self.json_document(documentos)
+
+        except ConnectionFailure:
+            # Manejo de la excepción ConnectionFailure
+            print("Error de conexión con la base de datos MongoDB.")
+            # Otras acciones a realizar en caso de excepción
+
+        except Exception as e:
+            # Manejo de otras excepciones
+            print("Ocurrió un error:", e)
+            # Otras acciones a realizar en caso de excepción
+
+        finally:
+            # Acciones a realizar después del bloque try-except, como cerrar conexiones
+            if "client" in locals():
+                client.close()
+
     def verify_user(self, username, email, password):
         try:
             user_dict = {"username": username, "email": email, "password": password}
