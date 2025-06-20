@@ -253,6 +253,34 @@ class user_service:
             if "client" in locals():
                 client.close()
 
+    def get_user_by_id(self, id_user: str) -> dict | None:
+        """
+        Recupera un usuario por su ID.
+        
+        Parámetros:
+            id_user (str): El identificador del usuario. Puede ser un ObjectId (hex string)
+                            o un valor de campo 'id_user' si así lo tienes modelado.
+                            
+        Retorna:
+            dict | None: Documento del usuario si lo encuentra, o None si no existe.
+        """
+        client = MongoClient(os.getenv("MONGODB_HOST"))
+
+        # Acceder a la base de datos
+        db = client[os.getenv("MONGODB_DB")]
+
+        # Acceder a la colección usuarios
+        collection_users = db["users"]
+        try:
+            query = {"_id": ObjectId(id_user)}
+        except Exception:
+            query = {"id_user": id_user}
+        doc = collection_users.find_one(query)
+        if doc is None:
+            return None
+        
+        return self.json_doc(doc)
+    
     def get_favorites(self, username, email):
         try:
             # Conectar al servidor MongoDB (por defecto, localhost:27017)

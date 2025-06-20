@@ -9,6 +9,7 @@ class Users(db.Document):
     nombre = db.StringField(required=True)
     apellido = db.StringField(required=True)
     created_at = db.DateTimeField(auto_now_add=True)
+    favorites = db.ListField(db.ReferenceField('podcasts'))
 
     def set_password(self, password):
         self.password = generate_password_hash(password)

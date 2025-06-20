@@ -67,6 +67,12 @@ def delete():
         return jsonify(user=user), 200
 
 
+def obtener_user():
+    user = request.args.get("id_user")
+    usuario = user_service().get_user_by_id(user)
+    return jsonify(usuario=usuario)
+
+
 def get_user_favorites():
     username = request.args.get("username", None)
     email = request.args.get("email", None)
