@@ -1,5 +1,6 @@
 from app.services.user_service import user_service
-from flask import jsonify, request
+from app.services.podcast_service import podcast_service
+from flask import jsonify, request, current_app
 from flask_bcrypt import Bcrypt
 from app.utils.logger import logger
 from dotenv import load_dotenv
@@ -171,3 +172,35 @@ def user_me():
         return jsonify({"error": "No se pudo borrar el usuario"}), 400
     else:
         return jsonify(user=user), 200
+
+
+def post_user_poscasts():
+    data = request.get_json() or {}
+    id_user    = data.get("id_user")
+    id_podcast = data.get("id_podcast")
+
+    try:
+        # Obtener objeto Podcast o devolver 404 si no existe
+        pod = podcast_service.get_podcast_by_id(id_podcast)
+        if not pod:
+            return jsonify({'error': f"Podcast con id '{id_podcast}' no existe."}), 404
+
+        # Actualizar el historial
+        user = user_service.post_history(id_user, pod)
+        return jsonify(user=user.to_json()), 200
+
+    except ValueError as ve:
+        # Usuario no encontrado
+        return jsonify({'error': str(ve)}), 404
+
+    except Exception as e:
+        current_app.logger.error(f"post_history falló: {e}")
+        return jsonify({'error': 'Error interno del servidor'}), 500
+
+def get_user_poscasts():
+    id_user = request.json.get("id_user", None)
+    
+    user = user_service().get_user_by_email(id_user)
+
+    return jsonify(user=user.to_json()['history'])
+

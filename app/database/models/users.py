@@ -10,6 +10,7 @@ class Users(db.Document):
     apellido = db.StringField(required=True)
     created_at = db.DateTimeField(auto_now_add=True)
     favorites = db.ListField(db.ReferenceField('podcasts'))
+    history = db.ListField(db.ReferenceField('podcasts'))
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
@@ -25,5 +26,6 @@ class Users(db.Document):
             "lastname": self.apellido,
             "rol": self.rol,
             "created_at": self.created_at.isoformat() if self.created_at else None,
+            "favorites": [f.to_json() for f in self.favorites] if self.history else None,
         }
 

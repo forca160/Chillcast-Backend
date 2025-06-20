@@ -7,6 +7,7 @@ import os
 from bson import ObjectId
 from dotenv import load_dotenv
 from datetime import datetime
+from app.database.database_config import db
 
 bcrypt = Bcrypt()
 
@@ -281,6 +282,15 @@ class user_service:
         
         return self.json_doc(doc)
     
+    def get_user_by_email(self, email: str):
+        
+        user = Users.objects(email=email).first()
+
+        if user is None:
+            return None
+        
+        return user  
+    
     def get_favorites(self, username, email):
         try:
             # Conectar al servidor MongoDB (por defecto, localhost:27017)
@@ -429,3 +439,25 @@ class user_service:
             # Acciones a realizar después del bloque try-except, como cerrar conexiones
             if "client" in locals():
                 client.close()
+
+    def post_history(self, id_user: str, podcast) -> Users:
+        # 1) Armar query: intentar _id primero, sino id_user
+        query = {}
+        try:
+            query['_id'] = ObjectId(id_user)
+        except (TypeError, db.ValidationError):
+            query['id_user'] = id_user
+
+        user = Users.objects(id=id_user).first()
+        # 2) Si no existe, error claro
+        if user is None:
+            raise ValueError(f"Usuario con id '{id_user}' no existe.")
+
+        # 3) Inicializar history si es None
+        if user.history is None:
+            user.history = []
+
+        # 4) Agregar el podcast y guardar
+        user.history.append(podcast)
+        user.save()
+        return user
