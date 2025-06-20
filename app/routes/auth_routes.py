@@ -9,7 +9,11 @@ from app.controllers.auth_controller import (
     delete_user_favorites,
     edit_user,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     user_me,
+=======
+    obtener_user,
+>>>>>>> Stashed changes
 =======
     obtener_user,
 >>>>>>> Stashed changes
@@ -54,9 +58,15 @@ def put_user():
 
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 @auth_routes.route("/user-me", methods=["GET"])
 def get_user_me():
     return user_me()
+=======
+@auth_routes.route("/get-user", methods=["GET"])
+def get_user():
+    return obtener_user()
+>>>>>>> Stashed changes
 =======
 @auth_routes.route("/get-user", methods=["GET"])
 def get_user():
