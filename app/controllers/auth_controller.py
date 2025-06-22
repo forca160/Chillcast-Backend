@@ -10,6 +10,7 @@ bcrypt = Bcrypt()
 load_dotenv()
 log = logger().get_logger()
 
+
 def register_user():
     """
     Se inserta el usuario en la base de datos
@@ -144,7 +145,7 @@ def edit_user():
     username = request.args.get("username", None)
     email = request.args.get("email", None)
     data = {
-        "generos": request.json.get("generos", None),
+        "generos_fav": request.json.get("generos", None),
         "nombre": request.json.get("nombre", None),
         "apellido": request.json.get("apellido", None),
     }
@@ -183,7 +184,6 @@ def post_user_poscasts():
         print(e)
     try:
 
-        
         # Actualizar el historial
         user = user_service().post_history(username, email, id_podcast)
         print(user)
@@ -191,19 +191,21 @@ def post_user_poscasts():
 
     except ValueError as ve:
         # Usuario no encontrado
-        return jsonify({'error': str(ve)}), 404
+        return jsonify({"error": str(ve)}), 404
 
     except Exception as e:
         log.debug(f"post_history falló: {e}")
-        return jsonify({'error': 'Error interno del servidor'}), 500
+        return jsonify({"error": "Error interno del servidor"}), 500
+
 
 def get_user_poscasts():
     email = request.args.get("email", None)
     username = request.args.get("username", None)
-    
+
     history = user_service().get_history(username, email)
 
     return jsonify(history=history)
+
 
 def obtener_recomendaciones():
     email = request.args.get("email", None)
