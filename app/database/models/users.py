@@ -4,13 +4,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class Users(db.Document):
+    username = db.StringField(required=True, max_length=60, unique=True)
     email = db.StringField(required=True, max_length=60, unique=True)
     password = db.StringField(required=True)
     nombre = db.StringField(required=True)
     apellido = db.StringField(required=True)
-    created_at = db.DateTimeField(auto_now_add=True)
-    favorites = db.ListField(db.ReferenceField('podcasts'))
+    fecha_alta = db.DateTimeField(auto_now_add=True)
+    generos_fav = db.ListField(db.ReferenceField('podcasts'))
     history = db.ListField(db.ReferenceField('podcasts'))
+    activo = db.BooleanField()
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
@@ -22,10 +24,12 @@ class Users(db.Document):
         return {
             "id": str(self.id),
             "email": self.email,
-            "firstname": self.nombre,
-            "lastname": self.apellido,
-            "rol": self.rol,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "favorites": [f.to_json() for f in self.favorites] if self.history else None,
+            "username": self.username,
+            "nombre": self.nombre,
+            "apellido": self.apellido,
+            "fecha_alta": self.fecha_alta.isoformat() if self.fecha_alta else None,
+            "history": [f.to_json() for f in self.history] if len(self.history)>=0 else None,
+            "generos_fav": self.generos_fav if self.generos_fav else None,
+            "activo": self.activo
         }
 

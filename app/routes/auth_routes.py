@@ -11,7 +11,8 @@ from app.controllers.auth_controller import (
     user_me,
     obtener_user,
     post_user_poscasts,
-    get_user_poscasts
+    get_user_poscasts,
+    obtener_recomendaciones
 )
 
 auth_routes = Blueprint("auth_routes", __name__, url_prefix="/api/v1/auth")
@@ -66,3 +67,7 @@ def get_user_me():
 @auth_routes.route("/get-user", methods=["GET"])
 def get_user():
     return obtener_user()
+
+@auth_routes.route("/get-recomendations", methods=["GET"])
+def get_recomendations():
+    return obtener_recomendaciones()

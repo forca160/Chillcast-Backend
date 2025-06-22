@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 bcrypt = Bcrypt()
 
 load_dotenv()
-
+log = logger().get_logger()
 
 def register_user():
     """
@@ -175,32 +175,40 @@ def user_me():
 
 
 def post_user_poscasts():
-    data = request.get_json() or {}
-    id_user    = data.get("id_user")
-    id_podcast = data.get("id_podcast")
-
     try:
-        # Obtener objeto Podcast o devolver 404 si no existe
-        pod = podcast_service.get_podcast_by_id(id_podcast)
-        if not pod:
-            return jsonify({'error': f"Podcast con id '{id_podcast}' no existe."}), 404
+        email = request.json.get("email")
+        username = request.json.get("username")
+        id_podcast = request.json.get("id_podcast")
+    except Exception as e:
+        print(e)
+    try:
 
+        
         # Actualizar el historial
-        user = user_service.post_history(id_user, pod)
-        return jsonify(user=user.to_json()), 200
+        user = user_service().post_history(username, email, id_podcast)
+        print(user)
+        return jsonify(user=user), 200
 
     except ValueError as ve:
         # Usuario no encontrado
         return jsonify({'error': str(ve)}), 404
 
     except Exception as e:
-        current_app.logger.error(f"post_history falló: {e}")
+        log.debug(f"post_history falló: {e}")
         return jsonify({'error': 'Error interno del servidor'}), 500
 
 def get_user_poscasts():
-    id_user = request.json.get("id_user", None)
+    email = request.args.get("email", None)
+    username = request.args.get("username", None)
     
-    user = user_service().get_user_by_email(id_user)
+    history = user_service().get_history(username, email)
 
-    return jsonify(user=user.to_json()['history'])
+    return jsonify(history=history)
 
+def obtener_recomendaciones():
+    email = request.args.get("email", None)
+    username = request.args.get("username", None)
+
+    recomedaciones = user_service().obtener_recomendaciones(username, email)
+
+    return jsonify(recomedaciones=recomedaciones)
