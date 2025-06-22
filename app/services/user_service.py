@@ -628,7 +628,7 @@ class user_service:
                     filters.append({'author': {'$in': list(authors_hist)}})
 
                 if filters:
-                    cursor = pods_col.find({'$or': filters}).limit(5)
+                    cursor = pods_col.find({'$or': filters}).limit(10)
                     segun_escuchados_list = [_stringify(doc) for doc in cursor]
 
             return {
