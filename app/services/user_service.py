@@ -81,13 +81,13 @@ class user_service:
         try:
             user = Users(
                 username=username,
-                email= email,
-                password= password,
-                nombre= nombre,
-                apellido= apellido,
-                generos_fav= generos_fav,
-                activo= True,
-                fecha_alta= datetime.today(),
+                email=email,
+                password=password,
+                nombre=nombre,
+                apellido=apellido,
+                generos_fav=generos_fav,
+                activo=True,
+                fecha_alta=datetime.today(),
             )
             user.save()
             """if data_username and data_email:
@@ -97,7 +97,6 @@ class user_service:
             elif data_email:
                 return "YA_EXISTE_EMAIL"""
 
-            
             return user
 
         except ConnectionFailure:
@@ -110,7 +109,7 @@ class user_service:
             print("Ocurrió un error:", e)
             # Otras acciones a realizar en caso de excepción
             return False
-        
+
     def edit_user(self, username, email, data):
         # Verificar si el usuario ya está registrado
         try:
@@ -174,7 +173,7 @@ class user_service:
                 {
                     "$or": [{"username": username}, {"email": email}],
                 },
-                {"password": 0, "favorites": 0},
+                {"password": 0, "favorites": 0, "history": 0},
             )
 
             if not documentos:
@@ -285,11 +284,11 @@ class user_service:
     def get_user_by_id(self, id_user: str) -> dict | None:
         """
         Recupera un usuario por su ID.
-        
+
         Parámetros:
             id_user (str): El identificador del usuario. Puede ser un ObjectId (hex string)
                             o un valor de campo 'id_user' si así lo tienes modelado.
-                            
+
         Retorna:
             dict | None: Documento del usuario si lo encuentra, o None si no existe.
         """
@@ -307,17 +306,17 @@ class user_service:
         doc = collection_users.find_one(query)
         if doc is None:
             return None
-        
+
         return self.json_doc(doc)
-    
+
     def get_user_by_email(self, email: str):
-        
+
         user = Users.objects(email=email).first()
 
         if user is None:
             return None
-        
-        return user  
+
+        return user
 
     def get_user_by_username_email(self, username: str, email: str):
         """
@@ -332,16 +331,13 @@ class user_service:
         """
         client = MongoClient(os.getenv("MONGODB_HOST"))
         db = client[os.getenv("MONGODB_DB")]
-        collection = db['users']
+        collection = db["users"]
 
-        query = {
-            'username': username,
-            'email': email
-        }
+        query = {"username": username, "email": email}
         user = collection.find_one(query)
         client.close()
         return user
-    
+
     def get_favorites(self, username, email):
         try:
             # Conectar al servidor MongoDB (por defecto, localhost:27017)
@@ -492,12 +488,11 @@ class user_service:
                 client.close()
 
     def post_history(self, username, email, id_podcast):
-        
+
         client = MongoClient(os.getenv("MONGODB_HOST"))
         db = client[os.getenv("MONGODB_DB")]
-        collection = db['users']
-        pods_col  = db['podcasts']
-
+        collection = db["users"]
+        pods_col = db["podcasts"]
 
         # 2) Buscar el podcast por su ID
         try:
@@ -505,26 +500,26 @@ class user_service:
         except InvalidId:
             client.close()
             raise ValueError(f"ID de podcast inválido: {id_podcast}")
-        
-        podcast_doc = pods_col.find_one({'_id': oid})
+
+        podcast_doc = pods_col.find_one({"_id": oid})
         if not podcast_doc:
             client.close()
             raise ValueError(f"Podcast con id '{id_podcast}' no existe.")
-        
+
         # 3) Actualizar el historial del usuario (embed del doc completo)
-        query = {'username': username, 'email': email}
+        query = {"username": username, "email": email}
         updated_user = collection.find_one_and_update(
             query,
-            {'$push': {'history': podcast_doc}},
-            return_document=ReturnDocument.AFTER
+            {"$push": {"history": podcast_doc}},
+            return_document=ReturnDocument.AFTER,
         )
         client.close()
-        
+
         if not updated_user:
             raise ValueError(f"Usuario '{username}' con email '{email}' no existe.")
-        
+
         return updated_user
-    
+
     def get_history(self, username: str, email: str) -> list:
         """
         Devuelve la lista 'history' del usuario identificado por username y email.
@@ -532,20 +527,19 @@ class user_service:
         """
         # Conexión
         client = MongoClient(os.getenv("MONGODB_HOST"))
-        db     = client[os.getenv("MONGODB_DB")]
-        users  = db['users']
+        db = client[os.getenv("MONGODB_DB")]
+        users = db["users"]
 
         # Buscar solo el campo history
         doc = users.find_one(
-            {'username': username, 'email': email},
-            {'history': 1, '_id': 0}
+            {"username": username, "email": email}, {"history": 1, "_id": 0}
         )
         client.close()
 
         if not doc:
             raise ValueError(f"Usuario '{username}' con email '{email}' no existe.")
 
-        history = doc.get('history', [])
+        history = doc.get("history", [])
 
         # Función recursiva para convertir ObjectId a string
         def _stringify(obj):
@@ -558,8 +552,8 @@ class user_service:
             else:
                 return obj
 
-        return _stringify(history)    
-    
+        return _stringify(history)
+
     def obtener_recomendaciones(self, username, email):
         """
         Devuelve un dict con:
@@ -571,20 +565,19 @@ class user_service:
         """
         client = MongoClient(os.getenv("MONGODB_HOST"))
         try:
-            db        = client[os.getenv("MONGODB_DB")]
-            users_col = db['users']
-            pods_col  = db['podcasts']
+            db = client[os.getenv("MONGODB_DB")]
+            users_col = db["users"]
+            pods_col = db["podcasts"]
 
             # 1) Traer sólo generos_fav y history del user
             user = users_col.find_one(
-                {'username': username, 'email': email},
-                {'generos_fav': 1, 'history': 1}
+                {"username": username, "email": email}, {"generos_fav": 1, "history": 1}
             )
             if not user:
                 raise ValueError(f"Usuario '{username}' con email '{email}' no existe.")
 
-            fav_genres = user.get('generos_fav', [])
-            history    = user.get('history', [])
+            fav_genres = user.get("generos_fav", [])
+            history = user.get("history", [])
 
             # Función recursiva para convertir ObjectId a str
             def _stringify(obj):
@@ -601,8 +594,8 @@ class user_service:
             generos_fav_list = []
             if fav_genres:
                 pipeline = [
-                    {'$match': {'genero': {'$in': fav_genres}}},
-                    {'$sample': {'size': 5}}
+                    {"$match": {"genero": {"$in": fav_genres}}},
+                    {"$sample": {"size": 5}},
                 ]
                 docs = pods_col.aggregate(pipeline)
                 generos_fav_list = [_stringify(doc) for doc in docs]
@@ -611,29 +604,29 @@ class user_service:
             segun_escuchados_list = []
             if history:
                 ultimos = history[-5:]
-                genres_hist  = set()
+                genres_hist = set()
                 authors_hist = set()
                 for p in ultimos:
                     # p es un dict ya embebido; extraemos géneros y autor
-                    for g in (p.get('genero') or []):
+                    for g in p.get("genero") or []:
                         genres_hist.add(g)
-                    a = p.get('author') or p.get('autores')
+                    a = p.get("author") or p.get("autores")
                     if a:
                         authors_hist.add(a)
 
                 filters = []
                 if genres_hist:
-                    filters.append({'genero': {'$in': list(genres_hist)}})
+                    filters.append({"genero": {"$in": list(genres_hist)}})
                 if authors_hist:
-                    filters.append({'author': {'$in': list(authors_hist)}})
+                    filters.append({"author": {"$in": list(authors_hist)}})
 
                 if filters:
-                    cursor = pods_col.find({'$or': filters}).limit(5)
+                    cursor = pods_col.find({"$or": filters}).limit(5)
                     segun_escuchados_list = [_stringify(doc) for doc in cursor]
 
             return {
-                'generos_fav': generos_fav_list,
-                'segun_escuchados': segun_escuchados_list
+                "generos_fav": generos_fav_list,
+                "segun_escuchados": segun_escuchados_list,
             }
 
         finally:
