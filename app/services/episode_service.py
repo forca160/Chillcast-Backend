@@ -40,7 +40,12 @@ class episode_service:
             collection_episode = db["episodes"]
 
             if episode:
-                documentos = list(collection_episode.find({"_id": ObjectId(episode)}))
+                documentos = list(
+                    collection_episode.find(
+                        {"_id": ObjectId(episode)},
+                        {"podcast_id": 0, "provider_episode_id": 0},
+                    )
+                )
             elif podcast:
                 # Obtener todos los documentos de la colección
                 documentos_podcast = collection_podcast.find_one(
@@ -53,6 +58,7 @@ class episode_service:
                 documentos = list(
                     collection_episode.find(
                         {"_id": {"$in": documentos_podcast.get("episodes")}},
+                        {"podcast_id": 0, "provider_episode_id": 0},
                     )
                 )
             else:
@@ -81,9 +87,11 @@ class episode_service:
 
         episodes_data = []
         for ep in podcast.episodes:
-            episodes_data.append({
-                'title': ep.title,
-                'description': ep.description,
-                # agregá más campos según tu modelo
-        })
+            episodes_data.append(
+                {
+                    "title": ep.title,
+                    "description": ep.description,
+                    # agregá más campos según tu modelo
+                }
+            )
         return episodes_data
