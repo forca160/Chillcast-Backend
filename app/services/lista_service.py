@@ -52,7 +52,7 @@ class lista_service:
                 {"user": str(documentos_user.get("_id"))}
                 if not lista
                 else {
-                    "user": documentos_user.get("_id"),
+                    "user": str(documentos_user.get("_id")),
                     "_id": ObjectId(lista),
                 }
             )
